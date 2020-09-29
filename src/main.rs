@@ -1,8 +1,10 @@
+use anyhow::Error;
 pub mod weather_opt;
-pub mod config;
 
-use weather_opt::WeatherOpt;
+use structopt::StructOpt;
 
-fn main() {
-    WeatherOpt::parse_args();
+
+fn main() -> Result<(), Error> {
+    let opt = weather_opt::WeatherOpt::from_args();
+    opt.cmd.run()
 }
