@@ -1,58 +1,92 @@
-
-use std::error::Error;
+use anyhow::Error;
+use confy::ConfyError;
+use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
-use crate::config::Config;
 
+const END_POINT: &str = "https://api.weatherbit.io/v2.0/";
 
 #[derive(StructOpt, Debug)]
 pub enum Command {
-	#[structopt(name = "current")]
-	Current,
-	#[structopt(name = "forecast")]
-	Forecast,
-	#[structopt(name = "config")]
-	Config 
+    #[structopt(name = "current")]
+    Current(CmdData),
+    #[structopt(name = "forecast")]
+    Forecast(CmdData),
+    #[structopt(name = "config")]
+    Config(CmdData),
+}
+
+#[derive(StructOpt, Default, Debug, Serialize, Deserialize)]
+pub struct CmdData {
+    #[structopt(short = "h", long)]
+    city: Option<String>,
+    #[structopt(short = "b", long)]
+    country: Option<String>,
+    #[structopt(short = "k", long)]
+    api_key: Option<String>,
+    #[structopt(short = "d", long, default_value = "3")]
+    days: i8,
 }
 
 #[derive(StructOpt, Debug)]
 pub struct WeatherOpt {
-	#[structopt(subcommand)] 
-	pub cmd: Command,
-	#[structopt(short="h", long)]
-	pub city: Option<String>,
-	#[structopt(short="b", long)]
-	pub country: Option<String>,
-	#[structopt(short="k", long)]
-	pub api_key: Option<String>,
-	#[structopt(short="d", long, default_value = "3")]
-	pub days: i8
-
+    #[structopt(subcommand)]
+    pub cmd: Command,
 }
 
-impl WeatherOpt {
+impl Command {
+    fn data_as_mut(&mut self) -> &mut CmdData {
+        match self {
+            Command::Current(data) => data,
+            Command::Forecast(data) => data,
+            Command::Config(data) => data,
+        }
+    }
 
-	pub fn parse_args() -> Result<(), Box<dyn Error>> {
-		let opt: WeatherOpt = Self::from_args();
+    pub fn data(&self) -> &CmdData {
+        match self {
+            Command::Current(data) => data,
+            Command::Forecast(data) => data,
+            Command::Config(data) => data,
+        }
+    }
 
-		match opt.cmd {
-			Command::Current => opt.get_current(),
-			Command::Forecast => opt.get_current(),
-			Command::Config => opt.get_current(),
-		}
-	}
+    pub fn run(&mut self) -> Result<(), Error> {
+        match self {
+            Command::Current(_data) => self.get_curret_weather(),
+            Command::Forecast(_data) => self.get_weather_forecast(),
+            Command::Config(_data) => self.set_config(),
+        }
+    }
 
-	fn get_current(&self) -> Result<(), Box<dyn Error>> {
-		println!("{:?}", self);
-		Ok(())
-	}
+    fn get_curret_weather(&mut self) -> Result<(), Error> {
+        //get config & fill in blanks1
+        let default = self.get_config()?;
+        let mut data = self.data_as_mut();
+        if data.city.is_none() || data.country.is_none() {
+            data.city = default.city; // ????
+            data.country = default.country;
+        }
 
-	fn get_forecast(self) ->  Result<(), Box<dyn Error>>{
-		println!("{:?}", self);
-		Ok(())
-	}
+        data.api_key = default.api_key;
+        println!("{:?}", self);
+        println!("Fetching weather..");
+        Ok(())
+    }
 
-	fn setup_config(&self)  -> Result<(), Box<dyn Error>> {
-		Config::new(&self)
-	}
+    fn get_weather_forecast(&self) -> Result<(), Error> {
+        println!("Fetching forecast...");
+        Ok(())
+    }
 
+    fn set_config(&self) -> Result<(), Error> {
+        confy::store("weather_config", self.data())?;
+        Ok(())
+    }
+
+    fn get_config(&self) -> Result<CmdData, ConfyError> {
+        let default_config: CmdData = confy::load("weather_config")?;
+        Ok(default_config)
+    }
+
+    // fn save_config(&self)
 }
