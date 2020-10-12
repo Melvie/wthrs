@@ -1,8 +1,8 @@
+use crate::weather::Forecast;
 use anyhow::Error;
 use confy::ConfyError;
 use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
-use crate::weather::Forecast;
 
 #[derive(StructOpt, Debug)]
 pub enum Command {
@@ -14,7 +14,7 @@ pub enum Command {
 
 pub enum Response {
     RequestResponse(Forecast),
-    ConfigSuccessResponse
+    ConfigSuccessResponse,
 }
 #[derive(StructOpt, Default, Debug, Serialize, Deserialize)]
 pub struct CmdData {
@@ -34,7 +34,6 @@ pub struct WeatherOpt {
     pub cmd: Command,
 }
 
-
 impl WeatherOpt {
     pub async fn parse_args() -> Result<(), Error> {
         let mut opt = WeatherOpt::from_args();
@@ -42,10 +41,10 @@ impl WeatherOpt {
 
         match resp {
             Response::RequestResponse(forecast) => println!("{:}", forecast),
-            Response::ConfigSuccessResponse => println!("Success! Config saved.")
-         }
+            Response::ConfigSuccessResponse => println!("Success! Config saved."),
+        }
 
-         Ok(())
+        Ok(())
     }
 }
 
@@ -91,13 +90,11 @@ impl Command {
 
     fn set_config(&self) -> Result<Response, Error> {
         confy::store("weather_config", self.data())?;
-        let resp = Ok(Response::ConfigSuccessResponse);
-        resp
+        Ok(Response::ConfigSuccessResponse)
     }
 
     fn get_config(&self) -> Result<CmdData, ConfyError> {
         let default_config: CmdData = confy::load("weather_config")?;
         Ok(default_config)
     }
-
 }
