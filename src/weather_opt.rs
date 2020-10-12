@@ -14,7 +14,7 @@ pub enum Command {
 
 pub enum Response {
     RequestResponse(Forecast),
-    NoneResponse
+    ConfigSuccessResponse
 }
 #[derive(StructOpt, Default, Debug, Serialize, Deserialize)]
 pub struct CmdData {
@@ -77,7 +77,7 @@ impl Command {
 
     fn set_config(&self) -> Result<Response, Error> {
         confy::store("weather_config", self.data())?;
-        let resp = Ok(Response::NoneResponse);
+        let resp = Ok(Response::ConfigSuccessResponse);
         resp
     }
 

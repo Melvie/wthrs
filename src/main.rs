@@ -1,18 +1,23 @@
-use anyhow::Error;
-use tokio;
-pub mod weather_opt;
-mod weather;
 
-use structopt::StructOpt;
+extern crate wthrs;
+use wthrs::weather_opt::{WeatherOpt, Response};
+use wthrs::weather::Forecast;
+use tokio;
+use anyhow::Error;
+
+// use structopt::StructOpt;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let mut opt = weather_opt::WeatherOpt::from_args();
-    let resp: weather_opt::Response = opt.cmd.run().await?;
 
-    if let weather_opt::Response::RequestResponse(forecast) = resp {
-        println!{"{}", forecast}
+    let mut opt = WeatherOpt::from_args();
+    let resp: Response = opt.cmd.run().await?;
+
+    match resp {
+       Response::RequestResponse(forecast) => println!("{:}", forecast),
+       Response::ConfigSuccessResponse => println!("Success! Config saved.")
     }
+
     Ok(())
 
 }
