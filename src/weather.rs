@@ -2,8 +2,8 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use crate::weather_opt::CmdData;
 use reqwest::Url;
+use std::fmt;
 
-// const END_POINT: &str = "https://api.weatherbit.io/v2.0/";
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Weather {
@@ -64,7 +64,11 @@ pub struct Forecast {
 	state_code: String
 }
 
-
+impl DailyWeather {
+	fn feels_like(&self) -> f32 {
+		(self.app_max_temp + self.app_min_temp)/2.0
+	}
+}
 
 impl Forecast {
 	pub async fn get(query_data: &CmdData) -> Result<Self, Error>{
@@ -80,6 +84,22 @@ impl Forecast {
 				.await?;
 
 			Ok(resp)
+	}
+}
 
+impl fmt::Display for Forecast {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "#################################################\n\n")?;
+		write!(f, "Todays weather for {},{}: \n", self.city_name, self.country_code)?;
+		for day in &self.data {
+			write!(f, "	{}\n", day.weather.description)?;
+			write!(f, "	Current Temp: {}\n", day.temp)?;
+			write!(f, "	Feels like: {}\n", day.feels_like())?;
+			write!(f, "	High/Low: {}, {}\n", day.high_temp, day.low_temp)?;
+			write!(f, "	POP%: {}\n", day.pop)?;
+			write!(f, "------------------------------------\n")?;
+		}
+		write!(f, "\n#################################################")?;
+		Ok(())
 	}
 }

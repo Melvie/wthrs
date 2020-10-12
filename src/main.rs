@@ -11,7 +11,7 @@ async fn main() -> Result<(), Error> {
     let resp: weather_opt::Response = opt.cmd.run().await?;
 
     if let weather_opt::Response::RequestResponse(forecast) = resp {
-        println!{"{:?}", forecast}
+        println!{"{}", forecast}
     }
     Ok(())
 
