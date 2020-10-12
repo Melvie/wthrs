@@ -34,6 +34,21 @@ pub struct WeatherOpt {
     pub cmd: Command,
 }
 
+
+impl WeatherOpt {
+    pub async fn parse_args() -> Result<(), Error> {
+        let mut opt = WeatherOpt::from_args();
+        let resp: Response = opt.cmd.run().await?;
+
+        match resp {
+            Response::RequestResponse(forecast) => println!("{:}", forecast),
+            Response::ConfigSuccessResponse => println!("Success! Config saved.")
+         }
+
+         Ok(())
+    }
+}
+
 impl Command {
     fn data_as_mut(&mut self) -> &mut CmdData {
         match self {
