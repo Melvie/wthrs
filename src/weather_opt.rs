@@ -14,7 +14,7 @@ pub enum Command {
 
 pub enum Response {
     RequestResponse(Forecast),
-    NoneResponse
+    ConfigSuccessResponse
 }
 #[derive(StructOpt, Default, Debug, Serialize, Deserialize)]
 pub struct CmdData {
@@ -32,6 +32,21 @@ pub struct CmdData {
 pub struct WeatherOpt {
     #[structopt(subcommand)]
     pub cmd: Command,
+}
+
+
+impl WeatherOpt {
+    pub async fn parse_args() -> Result<(), Error> {
+        let mut opt = WeatherOpt::from_args();
+        let resp: Response = opt.cmd.run().await?;
+
+        match resp {
+            Response::RequestResponse(forecast) => println!("{:}", forecast),
+            Response::ConfigSuccessResponse => println!("Success! Config saved.")
+         }
+
+         Ok(())
+    }
 }
 
 impl Command {
@@ -71,13 +86,12 @@ impl Command {
         }
 
         data.api_key = default.api_key;
-        println!("Request Data: {:?}", data);
         Ok(())
     }
 
     fn set_config(&self) -> Result<Response, Error> {
         confy::store("weather_config", self.data())?;
-        let resp = Ok(Response::NoneResponse);
+        let resp = Ok(Response::ConfigSuccessResponse);
         resp
     }
 
@@ -86,5 +100,4 @@ impl Command {
         Ok(default_config)
     }
 
-    // fn save_config(&self)
 }
