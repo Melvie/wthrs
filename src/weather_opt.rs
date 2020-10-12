@@ -86,7 +86,6 @@ impl Command {
         }
 
         data.api_key = default.api_key;
-        println!("Request Data: {:?}", data);
         Ok(())
     }
 
@@ -101,5 +100,4 @@ impl Command {
         Ok(default_config)
     }
 
-    // fn save_config(&self)
 }

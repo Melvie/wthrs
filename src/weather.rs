@@ -77,7 +77,7 @@ impl Forecast {
 			query_data.city, query_data.country, query_data.days, query_data.api_key);
 
 			let url: Url = Url::parse(&*url)?;
-
+			//TODO: Catch city/canada/location not found
 			let resp = reqwest::get(url)
 				.await?
 				.json::<Forecast>()
