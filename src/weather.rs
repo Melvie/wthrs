@@ -1,5 +1,5 @@
 use crate::weather_opt::CmdData;
-use anyhow::Error;
+use anyhow::{Result, Error};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -89,18 +89,28 @@ impl fmt::Display for Forecast {
         write!(f, "#################################################\n\n")?;
         writeln!(
             f,
-            "Todays weather for {},{}: ",
+            "Today's weather for {},{} : ",
             self.city_name, self.country_code
-        )?;
-        for day in &self.data {
-            writeln!(f, "	{}", day.weather.description)?;
-            writeln!(f, "	Current Temp: {}", day.temp)?;
-            writeln!(f, "	Feels like: {}", day.feels_like())?;
-            writeln!(f, "	High/Low: {}, {}", day.high_temp, day.low_temp)?;
-            writeln!(f, "	POP%: {}", day.pop)?;
-            writeln!(f, "------------------------------------\n")?;
-        }
+		)?;
+		writeln!(f, "{}", self.data[0])?;
+		writeln!(f, "------------------------------------")?;
+		for day in &self.data[1..] {
+			writeln!(f, "{}", day)?;
+			writeln!(f, "------------------------------------")?;
+		}
+
         write!(f, "\n#################################################")?;
         Ok(())
     }
+}
+
+impl fmt::Display for DailyWeather {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		writeln!(
+			f,
+			"{}\nCurrent Temp: {}\nFeels like: {}\nHigh/Low: {}/{}\nPOP%: {}", 
+            self.weather.description,self.temp,self.feels_like(),self.high_temp,self.low_temp,self.pop)?;
+		Ok(())
+	}
+
 }
