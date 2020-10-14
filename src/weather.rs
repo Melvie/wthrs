@@ -1,5 +1,5 @@
 use crate::weather_opt::CmdData;
-use anyhow::{Result, Error};
+use anyhow::{Result, Error, format_err};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -78,9 +78,12 @@ impl Forecast {
 
         let url: Url = Url::parse(&*url)?;
         //TODO: Catch city/canada/location not found
-        let resp = reqwest::get(url).await?.json::<Forecast>().await?;
+        let resp = reqwest::get(url).await?.json::<Forecast>().await;
 
-        Ok(resp)
+        match resp { 
+            Ok(resp) => Ok(resp),
+            Err(_) => Err(format_err!("Bad Request: Can't find weather for that location :/"))
+        }
     }
 }
 
