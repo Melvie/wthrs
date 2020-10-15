@@ -4,9 +4,9 @@ use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::collections::HashMap;
+use structopt::lazy_static::lazy_static;
 
-
-structopt::lazy_static::lazy_static! {
+lazy_static! {
     static ref WEATHERICONS: HashMap<i32, &'static str> = {
         let mut map = HashMap::new();
         map.insert(800, "☀");
@@ -141,17 +141,18 @@ impl fmt::Display for Forecast {
         write!(f, "#################################################\n\n")?;
         writeln!(
             f,
-            "Today's weather for {},{} : ",
+            "Today's weather for {},{}: ",
             self.city_name, self.country_code
         )?;
-        writeln!(f, "{}", self.data[0])?;
-        writeln!(f, "------------------------------------")?;
+        writeln!(f, "{}\n", self.data[0])?;
+        writeln!(f, "Forecast for next: {} day(s)", self.data.len())?;
         for day in &self.data[1..] {
-            writeln!(f, "{}", day)?;
             writeln!(f, "------------------------------------")?;
+            writeln!(f, "Date: {}", day.datetime)?;
+            writeln!(f, "{}", day)?;
         }
 
-        write!(f, "\n#################################################")?;
+        write!(f, "#################################################")?;
         Ok(())
     }
 }
@@ -159,8 +160,8 @@ impl fmt::Display for Forecast {
 impl fmt::Display for DailyWeather {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let weather = &self.weather;
-        writeln!(
-            f,
+        write!(
+            f, 
             "{} {}\nCurrent Temp: {}\nFeels like: {}\nHigh/Low: {}/{}\nPOP%: {}",
             self.weather.description,
             WEATHERICONS[&weather.code],
