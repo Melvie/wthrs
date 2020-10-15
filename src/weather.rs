@@ -1,8 +1,55 @@
 use crate::weather_opt::CmdData;
-use anyhow::{Result, Error, format_err};
+use anyhow::{format_err, Error, Result};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::collections::HashMap;
+
+
+structopt::lazy_static::lazy_static! {
+    static ref WEATHERICONS: HashMap<i32, &'static str> = {
+        let mut map = HashMap::new();
+        map.insert(800, "☀");
+        map.insert(200, "⛈");
+        map.insert(201, "⛈");
+        map.insert(202, "⛈");
+        map.insert(230, "🌩");
+        map.insert(230, "🌩");
+        map.insert(232, "🌩");
+        map.insert(233, "🌩");
+        map.insert(300, "🌧");
+        map.insert(301, "🌧");
+        map.insert(302, "🌧");
+        map.insert(500, "🌧");
+        map.insert(501, "🌧");
+        map.insert(511, "🌧");
+        map.insert(501, "🌧");
+        map.insert(520, "🌧");
+        map.insert(522, "🌧");
+        map.insert(900, "🌧");
+        map.insert(521, "🌦");
+        map.insert(600, "🌨");
+        map.insert(601, "🌨");
+        map.insert(602, "🌨");
+        map.insert(610, "🌨");
+        map.insert(611, "🌨");
+        map.insert(612, "🌨");
+        map.insert(621, "🌨");
+        map.insert(622, "🌨");
+        map.insert(623, "🌨");
+        map.insert(700, "🌨");
+        map.insert(711, "🌫");
+        map.insert(721, "🌫");
+        map.insert(731, "🌫");
+        map.insert(741, "🌫");
+        map.insert(751, "🌫");
+        map.insert(801, "🌤");
+        map.insert(802, "🌥");
+        map.insert(803, "⛅");
+        map.insert(804, "☁");
+        map
+    };
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Weather {
@@ -80,9 +127,11 @@ impl Forecast {
         //TODO: Catch city/canada/location not found
         let resp = reqwest::get(url).await?.json::<Forecast>().await;
 
-        match resp { 
+        match resp {
             Ok(resp) => Ok(resp),
-            Err(_) => Err(format_err!("Bad Request: Can't find weather for that location :/"))
+            Err(_) => Err(format_err!(
+                "Bad Request: Can't find weather for that location :/"
+            )),
         }
     }
 }
@@ -94,13 +143,13 @@ impl fmt::Display for Forecast {
             f,
             "Today's weather for {},{} : ",
             self.city_name, self.country_code
-		)?;
-		writeln!(f, "{}", self.data[0])?;
-		writeln!(f, "------------------------------------")?;
-		for day in &self.data[1..] {
-			writeln!(f, "{}", day)?;
-			writeln!(f, "------------------------------------")?;
-		}
+        )?;
+        writeln!(f, "{}", self.data[0])?;
+        writeln!(f, "------------------------------------")?;
+        for day in &self.data[1..] {
+            writeln!(f, "{}", day)?;
+            writeln!(f, "------------------------------------")?;
+        }
 
         write!(f, "\n#################################################")?;
         Ok(())
@@ -108,12 +157,19 @@ impl fmt::Display for Forecast {
 }
 
 impl fmt::Display for DailyWeather {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		writeln!(
-			f,
-			"{}\nCurrent Temp: {}\nFeels like: {}\nHigh/Low: {}/{}\nPOP%: {}", 
-            self.weather.description,self.temp,self.feels_like(),self.high_temp,self.low_temp,self.pop)?;
-		Ok(())
-	}
-
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let weather = &self.weather;
+        writeln!(
+            f,
+            "{} {}\nCurrent Temp: {}\nFeels like: {}\nHigh/Low: {}/{}\nPOP%: {}",
+            self.weather.description,
+            WEATHERICONS[&weather.code],
+            self.temp,
+            self.feels_like(),
+            self.high_temp,
+            self.low_temp,
+            self.pop
+        )?;
+        Ok(())
+    }
 }
